@@ -126,7 +126,7 @@ Next steps define how to download the project and run it under a port/path, you 
   - write meaningful commit messages (do not use `fix` or `update` as comment, be more specific)
 
 - ### PR:
-  - title: `merge(<source>-><target>): <comment>`
+  - title: `merge(<source> -> <target>): <comment>`
     - `<source>`: source branch
     - `<target>`: target branch
     - `<comment>`: short description of the PR
