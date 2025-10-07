@@ -7,7 +7,7 @@ on:
 
 jobs:
   tag_and_release:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'r/')
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -44,21 +44,30 @@ jobs:
           PR_BODY="${PR_BODY#"${PR_BODY%%[![:space:]]*}"}"
           PR_BODY="${PR_BODY%"${PR_BODY##*[![:space:]]}"}"
 
-          if [[ "${PR_BODY}" =~ ^##[[:space:]]Description$'\n\n'([^\n].+)$'\n\n'---$'\n\n'##[[:space:]]Changelog$'\n\n'(.*) ]]; then
-            DESCRIPTION="${DESCRIPTION#"${DESCRIPTION%%[![:space:]]*}"}"
-            DESCRIPTION="${DESCRIPTION%"${DESCRIPTION##*[![:space:]]}"}"
-            CHANGELOG="${CHANGELOG#"${CHANGELOG%%[![:space:]]*}"}"
-            CHANGELOG="${CHANGELOG%"${CHANGELOG##*[![:space:]]}"}"
-          else
-            echo "PR description does not match expected format:"
-            echo "## Description"
-            echo "<description>"
-            echo ""
-            echo "---"
-            echo ""
-            echo "## Changelog"
-            echo "<changelog>"
-          fi
+          MATCH=$(
+            echo "${PR_BODY}" | awk '
+              /## Description/ {description_flag=1; next}
+              /## Changelog/ {description_flag=0; changelog_flag=1; next}
+              /^---/ {description_flag=0; changelog_flag=0}
+              description_flag {description = description $0 ORS}
+              changelog_flag {changelog = changelog $0 ORS}
+              END {
+                gsub(/~~~~~/, "_____", description);
+                gsub(/~~~~~/, "_____", changelog);
+                gsub(/\r/, "", description);
+                gsub(/\r/, "", changelog);
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", description);
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", changelog);
+                printf "%s~~~~~%s", description, changelog;
+              }'
+          )
+
+          DESCRIPTION="${MATCH%%~~~~~*}"
+          CHANGELOG="${MATCH#*~~~~~}"
+
+          [ -z "${DESCRIPTION}" -a -z "${CHANGELOG}" ] && DESCRIPTION="${PR_BODY}"
+          [ -z "${DESCRIPTION}" ] && DESCRIPTION="No release notes provided."
+          [ -z "${CHANGELOG}" ] && CHANGELOG="See full changelog link below."
 
           echo "description<<EOF" >> "${GITHUB_OUTPUT}"
           echo "${DESCRIPTION}" >> "${GITHUB_OUTPUT}"
@@ -75,6 +84,8 @@ jobs:
             | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
             | sort -V \
             | tail -n 1)
+
+          [ -z "$LAST_TAG" ] && LAST_TAG=$(git rev-list --max-parents=0 HEAD)
 
           echo "last_tag=${LAST_TAG}" >> "${GITHUB_OUTPUT}"
 
