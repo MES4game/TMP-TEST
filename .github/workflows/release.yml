@@ -88,50 +88,50 @@ jobs:
       - name: Get previous version and check new version validity
         id: previousversion
         run: |
-          CURRENT="$1"
-                  
+          CURRENT="${{ steps.extractmeta.outputs.version }}"
+
           git tag -l "v${CURRENT}" 2>/dev/null | grep -Eq "v${CURRENT}" && echo "Error: version ${CURRENT} already exists as a tag" && exit 1
-                  
+
           version_to_array() {
             IFS='.'
             read -r MAJOR MINOR PATCH <<< "${1#v}"
             echo "$MAJOR" "$MINOR" "$PATCH"
           }
-                  
+
           version_le() {
             read -r M1 m1 p1 <<< "$(version_to_array "$1")"
             read -r M2 m2 p2 <<< "$(version_to_array "$2")"
-                  
+
             [[ M1 -lt M2 ]] && return 0
             [[ M1 -eq M2 && m1 -lt m2 ]] && return 0
             [[ M1 -eq M2 && m1 -eq m2 && p1 -le p2 ]] && return 0
-                  
+
             return 1
           }
-                  
+
           TAGS=$(git tag -l "v*.*.*")
           for TAG in ${TAGS}; do
             TAG="$(echo "${TAG}" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$')" || continue
             TAG="$(echo "${TAG}" | tr -d 'v')"
-                  
+
             if version_le "${CURRENT}" "${TAG}"; then
               [[ -z "${SUPERIOR}" ]] || version_le "${TAG}" "${SUPERIOR}" && SUPERIOR="${TAG}"
             fi
-                  
+
             if version_le "${TAG}" "${CURRENT}"; then
               [[ -z "${INFERIOR}" ]] || version_le "${INFERIOR}" "${TAG}" && INFERIOR="${TAG}"
             fi
           done
-                  
+
           echo "previous_version=${INFERIOR}"
-                  
+
           if [[ -n "${INFERIOR}" && -n "${SUPERIOR}" ]]; then
             read -r Mi mi pi <<< "$(version_to_array "${INFERIOR}")"
             read -r Mc mc pc <<< "$(version_to_array "${CURRENT}")"
             read -r Ms ms ps <<< "$(version_to_array "${SUPERIOR}")"
-                  
+
             [[ $Mc -lt $Ms || $mc -lt $ms ]] && exit 0
-                  
+
             echo "Error: invalid version ${CURRENT}, version ${SUPPERIOR} blocks it"
             exit 1
           fi
