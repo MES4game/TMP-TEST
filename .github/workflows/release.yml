@@ -18,6 +18,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check required vars
+        run: |
+          if [ -z "${{ secrets.ADMIN_TOKEN }}" ]; then
+            echo "❌ ADMIN_TOKEN is not defined in repo/environment secrets."
+            exit 1
+          fi
+          echo "✅ Required vars/secrets are set."
+
       - name: Extract version & title from PR title
         id: extractmeta
         run: |
