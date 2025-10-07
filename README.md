@@ -133,6 +133,7 @@ Next steps define how to download the project and run it under a port/path, you 
   - description
     - optional: follow the template provided by GitHub
     - if you did not use the template, at least provide a description of the changes
+  - for the merge commit, let GitHub generate it automatically (do not edit it)
   - reviewers: at least one reviewer must be assigned (preferably the repository admin or the service manager)
   - In case of a release PR (from `dev` to `main`):
     - title: `r/<version> - <name>`
@@ -167,6 +168,7 @@ Next steps define how to download the project and run it under a port/path, you 
 - ### Actions:
   - `CI`: runs on every push and PR, lints and builds the project to make sure everything is fine
   - `CD`: runs on every release from `main`, builds the Docker image and pushes it to Docker Hub
+  - `release`: runs on every release PR from `dev` to `main`, generates the release notes and creates a GitHub release
 - ### Secrets:
   - `DOCKERHUB_TOKEN`: Docker Hub token for pushing images (make it inside an environment named `production` to restrict access only to the main branch and version tags)
   - `DOCKERHUB_TOKEN`: Admin GitHub user token with contents write permission on that repo (make it inside an environment named `release` to restrict access only to the main branch)
