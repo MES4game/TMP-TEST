@@ -27,10 +27,10 @@ jobs:
           TYPE_ORDER=("feat" "chore" "fix" "perf" "test" "style" "docs" "refactor")
 
           get_commits_recursive() {
-            local sha=$1
-            parents=($(git rev-list --parents -n 1 $sha))
+            local sha="$1"
+            parents=($(git rev-list --parents -n 1 "${sha}"))
             if [ ${#parents[@]} -le 1 ]; then
-              echo "$sha"
+              echo "${sha}"
             else
               for ((i=1;i<${#parents[@]};i++)); do
                 get_commits_recursive ${parents[$i]}
@@ -38,7 +38,10 @@ jobs:
             fi
           }
 
-          PR_COMMITS=$(gh pr view $PR_NUMBER --repo "${REPO}" --json commits -q '.commits[].oid')
+          PR_COMMITS=$(gh pr view "${PR_NUMBER}" --repo "${REPO}" --json commits -q '.commits[].oid')
+
+          echo "PR Commits: ${PR_COMMITS}"
+
           ALL_COMMITS=()
           for sha in ${PR_COMMITS}; do
             parent_count=$(git rev-list --parents -n 1 "${sha}" | wc -w)
@@ -49,6 +52,8 @@ jobs:
             fi
           done
           ALL_COMMITS=($(echo "${ALL_COMMITS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+
+          echo "All Commits: ${ALL_COMMITS[@]}"
 
           CHANGES=()
           for sha in ${ALL_COMMITS[@]}; do
@@ -63,6 +68,8 @@ jobs:
             fi
           done
 
+          echo "Changes: ${CHANGES[@]}"
+
           SORTED_CHANGES=()
           for type in ${TYPE_ORDER[@]}; do
             for change in ${CHANGES[@]}; do
@@ -72,8 +79,16 @@ jobs:
             done
           done
 
+          echo "Sorted Changes: ${SORTED_CHANGES[@]}"
+
           CHANGELOG="$(printf "%s\n" ${SORTED_CHANGES[@]})"
 
           PR_BODY="$(gh pr view "${PR_NUMBER}" --repo "${REPO}" --json body -q '.body')"
-          PR_BODY="${PR_BODY}\n\n---\n\n## Changelog\n\n${CHANGELOG}\n"
+          PR_BODY="${PR_BODY}
+          
+          ---
+            
+          ## Changelog
+          
+          ${CHANGELOG}"
           gh pr edit "${PR_NUMBER}" --repo "${REPO}" --body "${PR_BODY}"
