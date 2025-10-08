@@ -1,0 +1,83 @@
+name: Update PR Changelog
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  update-pr-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+
+      - name: Authenticate GitHub CLI
+        run: |
+          gh auth setup-git
+          gh auth status
+
+      - name: Generate changelog and update PR
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+
+          TYPE_ORDER=("feat" "chore" "fix" "perf" "test" "style" "docs" "refactor")
+
+          get_commits_recursive() {
+            local sha=$1
+            parents=($(git rev-list --parents -n 1 $sha))
+            if [ ${#parents[@]} -le 1 ]; then
+              echo "$sha"
+            else
+              for ((i=1;i<${#parents[@]};i++)); do
+                get_commits_recursive ${parents[$i]}
+              done
+            fi
+          }
+
+          PR_COMMITS=$(gh pr view $PR_NUMBER --repo "${REPO}" --json commits -q '.commits[].oid')
+          ALL_COMMITS=()
+          for sha in ${PR_COMMITS}; do
+            parent_count=$(git rev-list --parents -n 1 "${sha}" | wc -w)
+            if [ ${parent_count} -gt 2 ]; then
+              ALL_COMMITS+=($(get_commits_recursive "${sha}"))
+            else
+              ALL_COMMITS+=("${sha}")
+            fi
+          done
+          ALL_COMMITS=($(echo "${ALL_COMMITS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+
+          CHANGES=()
+          for sha in ${ALL_COMMITS[@]}; do
+            MSG="$(git log -1 --pretty=format:%s "${sha}")"
+            if [[ "${MSG}" =~ ^([a-z|]+)\(?:[a-zA-Z]+(?:-[a-zA-Z])*(?:-[0-9]+)\):[[:space:]](.+)$ ]]; then
+              TYPES=${BASH_REMATCH[1]}
+              COMMENT=${BASH_REMATCH[2]}
+              IFS='|' read -ra TYPE_ARRAY <<< "${TYPES}"
+              for type in ${TYPE_ARRAY[@]}; do
+                CHANGES+=("${type}: ${COMMENT}")
+              done
+            fi
+          done
+
+          SORTED_CHANGES=()
+          for type in ${TYPE_ORDER[@]}; do
+            for change in ${CHANGES[@]}; do
+              if [[ "${change}" == "${type}":* ]]; then
+                SORTED_CHANGES+=("- ${change}")
+              fi
+            done
+          done
+
+          CHANGELOG="$(printf "%s\n" ${SORTED_CHANGES[@]})"
+
+          PR_BODY="$(gh pr view "${PR_NUMBER}" --repo "${REPO}" --json body -q '.body')"
+          PR_BODY="${PR_BODY}\n\n---\n\n## Changelog\n\n${CHANGELOG}\n"
+          gh pr edit "${PR_NUMBER}" --repo "${REPO}" --body "${PR_BODY}"
