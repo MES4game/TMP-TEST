@@ -38,7 +38,7 @@ Next steps define how to download the project and run it under a port/path, you 
   - need to clone the repository 
   - need to have Node.JS installed with npm ([download link](https://nodejs.org/en/download) and choose `using nvm with npm` option)
   1. open a terminal
-  2. clone the repository with <!-- PATTERN="`git clone https://github.com/${GITHUB_REPOSITORY}.git <path>`" --><!-- PATTERN_END -->
+  2. clone the repository with <!-- PATTERN="`git clone https://github.com/${GITHUB_REPOSITORY}.git <path>`" -->`git clone https://github.com/${GITHUB_REPOSITORY}.git <path>`<!-- PATTERN_END -->
   3. navigate to the cloned folder with `cd <path>`
   4. run `npm ci`
   5. Depends on your needs:
@@ -56,10 +56,10 @@ Next steps define how to download the project and run it under a port/path, you 
   2. create a folder where the container will save its data with `mkdir <data-folder>`
   3. create a `docker-compose.yml` file
       - you can find an example of `docker-compose.yml` [here](./.docker/front/docker-compose.yml)
-      - you can copy it with <!-- PATTERN="`curl -o docker-compose.yml https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/docker-compose.yml`" --><!-- PATTERN_END -->
+      - you can copy it with <!-- PATTERN="`curl -o docker-compose.yml https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/docker-compose.yml`" -->`curl -o docker-compose.yml https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/docker-compose.yml`<!-- PATTERN_END -->
   4. create a `.env` file
       - you can find an example of `.env` [here](./.docker/front/example.env)
-      - you can get it with <!-- PATTERN="`curl -o .env https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/example.env`" --><!-- PATTERN_END -->
+      - you can get it with <!-- PATTERN="`curl -o .env https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/example.env`" -->`curl -o .env https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/example.env`<!-- PATTERN_END -->
   5. edit them to your needs
   6. run `docker compose up -d --force-recreate --pull always` to start the container
   7. configure your webserver to serve the port you chose in the `.env` file
