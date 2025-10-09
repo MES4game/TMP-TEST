@@ -48,7 +48,8 @@ jobs:
             }egxs;
           ' "README.md" > "tmp.md"
 
-          FILE_SHA="$(gh api "/repos/${{ github.repository }}/contents/README.md" -q ".sha" -F ref="${{ steps.branch.outputs.new_branch }}" || echo "")"
+          BRANCH_SHA="$(gh api "/repos/${{ github.repository }}/git/ref/heads/${{ steps.branch.outputs.new_branch }}" -q ".object.sha")"
+          FILE_SHA="$(gh api "/repos/${{ github.repository }}/contents/README.md" -q ".sha" -F ref="${BRANCH_SHA}" || echo "")"
           NEW_CONTENT="$(cat "tmp.md" | base64 -w 0)"
 
           echo "First part done"
