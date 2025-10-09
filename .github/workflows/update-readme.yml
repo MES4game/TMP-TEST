@@ -22,17 +22,12 @@ jobs:
         run: |
           BASE_SHA="$(gh api "repos/${{ github.repository }}/git/ref/heads/${BASE_BRANCH}" -q '.object.sha')"
           NEW_BRANCH="${BRANCH_NAME}-$(openssl rand -hex 5)"
+
+          gh api -X POST "repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/heads/${NEW_BRANCH}" \
+            -f sha="${BASE_SHA}"
+
           echo "new_branch=${NEW_BRANCH}" >> "${GITHUB_OUTPUT}"
-
-          CMD=(gh api -X POST "repos/${{ github.repository }}/git/refs" \
-            -F ref="refs/heads/${NEW_BRANCH}" \
-            -F sha="${BASE_SHA}")
-
-          if [ -n "$FILE_SHA" ]; then
-            CMD+=(-F "sha=${FILE_SHA}")
-          fi
-
-          "${CMD[@]}"
 
       - name: Update README
         run: |
@@ -53,14 +48,17 @@ jobs:
             }egxs;
           ' "README.md" > "tmp.md"
 
-          FILE_SHA="$(gh api /repos/${{ github.repository }}/contents/README.md -q ".sha" -F ref="${{ steps.branch.outputs.new_branch }}" || echo "")"
+          FILE_SHA="$(gh api "/repos/${{ github.repository }}/contents/README.md" -q ".sha" -F ref="${{ steps.branch.outputs.new_branch }}" || echo "")"
           NEW_CONTENT="$(cat "tmp.md" | base64 -w 0)"
 
-          gh api -X PUT /repos/${{ github.repository }}/contents/README.md \
+          CMD=(gh api -X PUT "/repos/${{ github.repository }}/contents/README.md" \
             -F message="chore(${BRANCH_NAME}): update README with latest variables" \
             -F content="${NEW_CONTENT}" \
-            -F branch="${{ steps.branch.outputs.new_branch }}" \
-            $( [ -n "${FILE_SHA}" ] && echo "-F sha=${FILE_SHA}" )
+            -F branch="${{ steps.branch.outputs.new_branch }}")
+
+          [ -n "${FILE_SHA}" ] && CMD+=(-F "sha=${FILE_SHA}")
+
+          "${CMD[@]}"
 
       - name: Create or update PR
         id: pr
