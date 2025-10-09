@@ -1,8 +1,8 @@
 # VPS-SITE-BDE-FRONT
 
 <p align="center">
-  <!-- PATTERN="![GitHub latest release](https://img.shields.io/github/v/release/${GITHUB_REPOSITORY})" --><!-- PATTERN_END -->
-  <!-- PATTERN="![License](https://img.shields.io/github/license/${GITHUB_REPOSITORY})" --><!-- PATTERN_END -->
+  <!-- PATTERN="<img src='https://img.shields.io/github/v/release/${GITHUB_REPOSITORY}' />" --><!-- PATTERN_END -->
+  <!-- PATTERN="<img src='https://img.shields.io/github/license/${GITHUB_REPOSITORY}' />" --><!-- PATTERN_END -->
 </p>
 
 Front-end repository of BDE website.
@@ -50,7 +50,7 @@ Next steps define how to download the project and run it under a port/path, you 
 
 - ### Docker
   - NO need to clone the repository
-  - image: [![Docker Image Version]<!-- PATTERN="(https://img.shields.io/docker/v/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)" --><!-- PATTERN_END --> ![Docker Image Size]<!-- PATTERN="(https://img.shields.io/docker/image-size/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)" --><!-- PATTERN_END -->]<!-- PATTERN="(https://hub.docker.com/r/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE})" --><!-- PATTERN_END -->
+  - image: <!-- PATTERN="[![Docker Image Version](https://img.shields.io/docker/v/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)](https://hub.docker.com/r/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE})" --><!-- PATTERN_END --> <!-- PATTERN="[![Docker Image Size](https://img.shields.io/docker/image-size/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)](https://hub.docker.com/r/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE})" --><!-- PATTERN_END -->
   - be sure you installed [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   1. open a terminal and navigate to the folder where you want to save your configuration with `cd <path>`
   2. create a folder where the container will save its data with `mkdir <data-folder>`
