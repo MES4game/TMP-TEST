@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      contents: write
+      contents: read
     env:
       GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
       BRANCH_NAME: update-readme
@@ -17,36 +17,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Load variables
-        run: |
-          echo "GITHUB_REPOSITORY=${{ github.repository }}" >> "${GITHUB_ENV}"
-          echo "DOCKERHUB_USERNAME=${{ vars.DOCKERHUB_USERNAME }}" >> "${GITHUB_ENV}"
-          echo "DOCKERHUB_IMAGE=${{ vars.DOCKERHUB_IMAGE }}" >> "${GITHUB_ENV}"
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-
       - name: Switch to update branch
         id: branch
         run: |
-          git fetch origin
-          while [[ 1 == 1 ]]; do
-            SUFFIX="$(openssl rand -hex 6)"
-            NEW_BRANCH="${BRANCH_NAME}-${SUFFIX}"
-
-            if git ls-remote --heads origin "${NEW_BRANCH}" | grep -q "${NEW_BRANCH}"; then
-              continue
-            fi
-
-            git checkout -b "${NEW_BRANCH}" "${BASE_BRANCH}"
-            echo "new_branch=${NEW_BRANCH}" >> "${GITHUB_OUTPUT}"
-            break
-          done
+          BASE_SHA="$(gh api "repos/${{ github.repository }}/git/ref/heads/${BASE_BRANCH}" -q '.object.sha')"
+          NEW_BRANCH="${BRANCH_NAME}-$(openssl rand -hex 10)"
+          gh api -X POST "repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/heads/${NEW_BRANCH}" \
+            -f sha="${BASE_SHA}"
+          echo "new_branch=${NEW_BRANCH}" >> "${GITHUB_OUTPUT}"
 
       - name: Update README
         run: |
+          GITHUB_REPOSITORY="${{ github.repository }}"
+          DOCKERHUB_USERNAME="${{ vars.DOCKERHUB_USERNAME }}"
+          DOCKERHUB_IMAGE="${{ vars.DOCKERHUB_IMAGE }}"
+
           perl -0777 -pe '
             s{
               <!--\s*PATTERN="(.*?)"\s*-->
@@ -60,43 +46,33 @@ jobs:
             }egxs;
           ' "README.md" > "tmp.md"
 
-          mv "tmp.md" "README.md"
+          FILE_SHA="$(gh api /repos/${{ github.repository }}/contents/README.md -q ".sha" -F ref="${{ steps.branch.outputs.new_branch }}" || echo "")"
+          NEW_CONTENT="$(cat "tmp.md" | base64 -w 0)"
 
-      - name: Push new README
-        run: |
-          git add README.md
-          git commit -m "chore(update-readme): update README with latest variables"
-          git push origin
+          gh api -X PUT /repos/${{ github.repository }}/contents/README.md \
+            -F message="chore(${BRANCH_NAME}): update README with latest variables" \
+            -F content="${NEW_CONTENT}" \
+            -F branch="${{ steps.branch.outputs.new_branch }}" \
+            $( [ -n "${FILE_SHA}" ] && echo "-F sha=${FILE_SHA}" )
 
       - name: Create or update PR
         id: pr
         run: |
-          pr_number=$(gh pr list --head "${{ steps.branch.outputs.new_branch }}" --base "${BASE_BRANCH}" --json number --jq '.[0].number')
+          PR_NUMBER=$(gh pr list --head "${{ steps.branch.outputs.new_branch }}" --base "${BASE_BRANCH}" --json number --jq '.[0].number')
 
-          if [ -z "${pr_number}" ]; then
-            pr_url="$(gh pr create \
+          if [ -z "${PR_NUMBER}" ]; then
+            PR_URL="$(gh pr create \
               --base "${BASE_BRANCH}" \
               --head "${{ steps.branch.outputs.new_branch }}" \
-              --title "Automated Markdown Update" \
-              --body "Auto-generated update via workflow.")"
-            echo "pr_url=${pr_url}" >> "${GITHUB_OUTPUT}"
+              --title "merge(${BRANCH_NAME} -> ${BASE_BRANCH}): update README.md" \
+              --body "Auto-generated update via workflow")"
+            echo "pr_url=${PR_URL}" >> "${GITHUB_OUTPUT}"
 
-            pr_number=$(gh pr view "${pr_url}" --json number --jq '.number')
+            PR_NUMBER=$(gh pr view "${PR_URL}" --json number --jq '.number')
           fi
 
-          echo "pr_number=${pr_number}" >> "${GITHUB_OUTPUT}"
+          echo "pr_number=${PR_NUMBER}" >> "${GITHUB_OUTPUT}"
 
-      - name: Merge PR
+      - name: Merge PR and delete branch
         run: |
-          gh api \
-            --method PUT \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.pr_number }}/merge \
-            -f merge_method=merge
-
-      - name: Delete branch
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/git/refs/heads/${{ steps.branch.outputs.new_branch }}
+          gh pr merge ${{ steps.pr.outputs.pr_number }} --merge --admin --delete-branch
