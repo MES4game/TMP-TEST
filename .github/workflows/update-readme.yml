@@ -51,6 +51,8 @@ jobs:
           FILE_SHA="$(gh api "/repos/${{ github.repository }}/contents/README.md" -q ".sha" -F ref="${{ steps.branch.outputs.new_branch }}" || echo "")"
           NEW_CONTENT="$(cat "tmp.md" | base64 -w 0)"
 
+          echo "First part done"
+
           CMD=(gh api -X PUT "/repos/${{ github.repository }}/contents/README.md" \
             -F message="chore(${BRANCH_NAME}): update README with latest variables" \
             -F content="${NEW_CONTENT}" \
