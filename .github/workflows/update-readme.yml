@@ -21,11 +21,18 @@ jobs:
         id: branch
         run: |
           BASE_SHA="$(gh api "repos/${{ github.repository }}/git/ref/heads/${BASE_BRANCH}" -q '.object.sha')"
-          NEW_BRANCH="${BRANCH_NAME}-$(openssl rand -hex 10)"
-          gh api -X POST "repos/${{ github.repository }}/git/refs" \
-            -f ref="refs/heads/${NEW_BRANCH}" \
-            -f sha="${BASE_SHA}"
+          NEW_BRANCH="${BRANCH_NAME}-$(openssl rand -hex 5)"
           echo "new_branch=${NEW_BRANCH}" >> "${GITHUB_OUTPUT}"
+
+          CMD=(gh api -X POST "repos/${{ github.repository }}/git/refs" \
+            -F ref="refs/heads/${NEW_BRANCH}" \
+            -F sha="${BASE_SHA}")
+
+          if [ -n "$FILE_SHA" ]; then
+            CMD+=(-F "sha=${FILE_SHA}")
+          fi
+
+          "${CMD[@]}"
 
       - name: Update README
         run: |
