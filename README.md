@@ -1,12 +1,15 @@
 # VPS-SITE-BDE-FRONT
 
-Front-end repository of BDE website.
+<p align="center">
+  <!-- PATTERN="![GitHub latest release](https://img.shields.io/github/v/release/${GITHUB_REPOSITORY})" --><!-- PATTERN_END -->
+  <!-- PATTERN="![License](https://img.shields.io/github/license/${GITHUB_REPOSITORY})" --><!-- PATTERN_END -->
+</p>
 
-Don't forget to run `chmod +x setup.sh && ./setup.sh` after cloning the repository.
+Front-end repository of BDE website.
 
 ---
 
-## Contents
+## Table of Contents
 
 - [Usage](#usage)
   - [Node.JS](#nodejs)
@@ -23,6 +26,7 @@ Don't forget to run `chmod +x setup.sh && ./setup.sh` after cloning the reposito
   - [Secrets](#secrets)
   - [Variables](#variables)
   - [Releases](#releases)
+- [License](#license)
 
 ---
 
@@ -31,24 +35,34 @@ Don't forget to run `chmod +x setup.sh && ./setup.sh` after cloning the reposito
 Next steps define how to download the project and run it under a port/path, you will have to configure a webserver on your machine to access it from internet (using nginx, apache2, etc.).
 
 - ### Node.JS
-  - need to clone the repository
-  - need to have npm
-  1. open a terminal at the root of the cloned repository
-  2. run `npm ci`
-  3. for development: run `npm run dev:run -- --port=<number>` and replace `<port>` with the port you want
-  4. for production: run `npm run build:run -- --output-path=<path>` and replace `<path>` with the path of the folder you want (it needs to be created before)
+  - need to clone the repository 
+  - need to have Node.JS installed with npm ([download link](https://nodejs.org/en/download) and choose `using nvm with npm` option)
+  1. open a terminal
+  2. clone the repository with <!-- PATTERN="`git clone https://github.com/${GITHUB_REPOSITORY}.git <path>`" --><!-- PATTERN_END -->
+  3. navigate to the cloned folder with `cd <path>`
+  4. run `npm ci`
+  5. Depends on your needs:
+      - for development: run `npm run dev:run -- --port=<number>` and replace `<port>` with the port you want
+      - for production: run `npm run build:run -- --output-path=<path>` and replace `<path>` with the path of the folder you want (it needs to be created before)
+  6. configure your webserver to serve the port/path you chose
+      - for development: `http://localhost:<port>` (replace `<port>` with the port you chose)
+      - for production: the path you chose in step 5
 
 - ### Docker
   - NO need to clone the repository
-  - image: [![Docker Image Version](https://img.shields.io/docker/v/ciapops/site-bde-front?sort=semver) ![Docker Image Size](https://img.shields.io/docker/image-size/ciapops/site-bde-front?sort=semver)](https://hub.docker.com/r/ciapops/site-bde-front)
-  - docker-compose:
-    1. open a terminal and navigate to the folder where you want to download the `docker-compose.yml` file
-    2. you can find an example of `docker-compose.yml` in the [`docker config`](./.docker/front) folder
-      - you can copy it with `curl -o docker-compose.yml https://raw.githubusercontent.com/CIA-PolytechPS/DEV-SITE-BDE-FRONT/main/.docker/front/docker-compose.yml`
-    3. you also need to copy [`example.env`](./.docker/front/example.env) to `.env`
-      - you can get it with `curl -o .env https://raw.githubusercontent.com/CIA-PolytechPS/DEV-SITE-BDE-FRONT/main/.docker/front/example.env`
-    4. edit `.env` to your needs
-    5. run `docker-compose up -d --force-recreate --pull always` to start the container
+  - image: [![Docker Image Version]<!-- PATTERN="(https://img.shields.io/docker/v/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)" --><!-- PATTERN_END --> ![Docker Image Size]<!-- PATTERN="(https://img.shields.io/docker/image-size/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE}?sort=semver)" --><!-- PATTERN_END -->]<!-- PATTERN="(https://hub.docker.com/r/${DOCKERHUB_USERNAME}/${DOCKERHUB_IMAGE})" --><!-- PATTERN_END -->
+  - be sure you installed [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+  1. open a terminal and navigate to the folder where you want to save your configuration with `cd <path>`
+  2. create a folder where the container will save its data with `mkdir <data-folder>`
+  3. create a `docker-compose.yml` file
+      - you can find an example of `docker-compose.yml` [here](./.docker/front/docker-compose.yml)
+      - you can copy it with <!-- PATTERN="`curl -o docker-compose.yml https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/docker-compose.yml`" --><!-- PATTERN_END -->
+  4. create a `.env` file
+      - you can find an example of `.env` [here](./.docker/front/example.env)
+      - you can get it with <!-- PATTERN="`curl -o .env https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/${DOCKER_CONFIG_FOLDER}/example.env`" --><!-- PATTERN_END -->
+  5. edit them to your needs
+  6. run `docker compose up -d --force-recreate --pull always` to start the container
+  7. configure your webserver to serve the port you chose in the `.env` file
 
 ---
 
@@ -187,3 +201,9 @@ Next steps define how to download the project and run it under a port/path, you 
     - the major and minor version (e.g. `v1.2`)
     - the major version (e.g. `v1`)
     - the `latest` tag (always points to the latest version)
+
+---
+
+## License
+
+This software is distributed under the [MIT License](https://opensource.org/licenses/MIT), see [LICENSE](./LICENSE) for more information.

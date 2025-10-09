@@ -34,6 +34,7 @@ jobs:
           GITHUB_REPOSITORY="${{ github.repository }}"
           DOCKERHUB_USERNAME="${{ vars.DOCKERHUB_USERNAME }}"
           DOCKERHUB_IMAGE="${{ vars.DOCKERHUB_IMAGE }}"
+          DOCKER_CONFIG_FOLDER="${{ vars.DOCKER_CONFIG_FOLDER }}"
 
           perl -0777 -pe '
             s{
