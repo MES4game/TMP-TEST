@@ -24,8 +24,10 @@ jobs:
           echo "DOCKERHUB_IMAGE=${{ vars.DOCKERHUB_IMAGE }}" >> "${GITHUB_ENV}"
 
       - name: Configure git
+        env:
+          PAT_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         run: |
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git && echo 1
+          git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/${{ github.repository }}.git && echo 1
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git config push.default current
