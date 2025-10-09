@@ -23,6 +23,8 @@ jobs:
           BASE_SHA="$(gh api "repos/${{ github.repository }}/git/ref/heads/${BASE_BRANCH}" -q '.object.sha')"
           NEW_BRANCH="${BRANCH_NAME}-$(openssl rand -hex 5)"
 
+          gh auth status
+
           gh api -X POST "repos/${{ github.repository }}/git/refs" \
             -f ref="refs/heads/${NEW_BRANCH}" \
             -f sha="${BASE_SHA}"
